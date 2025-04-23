@@ -1,11 +1,11 @@
-// AddPersonnelForm.js
-
 import React, { useState } from 'react';
 
 function AddPersonnelForm({ onAdd }) {
   const [name, setName] = useState('');
   const [rank, setRank] = useState('');
   const [status, setStatus] = useState('');
+  const [role, setRole] = useState(''); // Added state for role
+  const [armyNumber, setArmyNumber] = useState(''); // Added state for army number
   const [photo, setPhoto] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -15,6 +15,8 @@ function AddPersonnelForm({ onAdd }) {
     formData.append('name', name);
     formData.append('rank', rank);
     formData.append('status', status);
+    formData.append('role', role);  // Append role field to form data
+    formData.append('army_number', armyNumber);  // Append army_number field to form data
     if (photo) {
       formData.append('photo', photo);
     }
@@ -30,10 +32,12 @@ function AddPersonnelForm({ onAdd }) {
       }
 
       const data = await response.json();
-      onAdd(data);
+      onAdd(data); // Assuming 'onAdd' function is being used to update the UI with new personnel
       setName('');
       setRank('');
       setStatus('');
+      setRole('');
+      setArmyNumber('');
       setPhoto(null);
     } catch (error) {
       console.error('Error:', error);
@@ -69,6 +73,24 @@ function AddPersonnelForm({ onAdd }) {
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
+        </div>
+        <div>
+          <label>Role: </label> {/* New field for role */}
+          <input
+            type="text"
+            value={role}
+            onChange={(e) => setRole(e.target.value)} // Handle role state change
+            required
+          />
+        </div>
+        <div>
+          <label>Army Number: </label> {/* New field for army number */}
+          <input
+            type="text"
+            value={armyNumber}
+            onChange={(e) => setArmyNumber(e.target.value)} // Handle army number state change
+            required
+          />
         </div>
         <div>
           <label>Photo: </label>

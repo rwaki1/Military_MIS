@@ -99,6 +99,8 @@ function App() {
               <th>Name</th>
               <th>Rank</th>
               <th>Status</th>
+              <th>Role</th> {/* Added Role column */}
+              <th>Army Number</th> {/* Added Army Number column */}
               <th>Image</th>
             </tr>
           </thead>
@@ -110,14 +112,15 @@ function App() {
                 <td>
                   <span
                     style={{
-                      color:
-                        person.status === "Active" ? "#2ecc71" : "#e74c3c",
+                      color: person.status === "Active" ? "#2ecc71" : "#e74c3c",
                       fontWeight: "bold",
                     }}
                   >
                     {person.status}
                   </span>
                 </td>
+                <td>{person.role}</td> {/* Display role */}
+                <td>{person.army_number}</td> {/* Display army number */}
                 <td>
                   {person.photoURL ? (
                     <img

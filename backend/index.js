@@ -1,7 +1,7 @@
-setPersonnelList((prevList) => [...prevList, newPerson]);
-useEffect(() => {
+//setPersonnelList((prevList) => [...prevList, newPerson]);
+//useEffect(() => {
     // Perform actions when personnelList changes
-  }, [personnelList]);
+  //}, [personnelList]);
   
 const express = require('express');
 const multer = require('multer');
