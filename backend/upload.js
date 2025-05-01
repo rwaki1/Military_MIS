@@ -36,14 +36,15 @@ function processCSV() {
       console.log(`📄 CSV read complete. Rows found: ${results.length}`);
 
       results.forEach((row, i) => {
-        const { name, rank, status, army_number, role, photo } = row;
+        const { name, grade, status, army_number, role, photo } = row;
 
+        // Insert into personnel table, using 'grade' instead of 'grade'
         const query = `
-          INSERT INTO personnel (name, \`rank\`, status, army_number, role, photo)
+          INSERT INTO personnel (name, \`grade\`, status, army_number, role, photo)
           VALUES (?, ?, ?, ?, ?, ?)
         `;
 
-        db.query(query, [name, rank, status, army_number, role, photo], (err) => {
+        db.query(query, [name, grade, status, army_number, role, photo], (err) => {
           if (err) {
             console.error(`❌ Row ${i + 1} insert failed:`, err.sqlMessage);
           } else {

@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import AddPersonnelForm from "./components/AddPersonnelForm";
@@ -9,9 +8,10 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  // 🔄 Fetch personnel from the backend on first load
+  // Fetch personnel from the backend on first load
   useEffect(() => {
-    axios.get("http://localhost:5000/api/personnel")
+    axios
+      .get("http://localhost:5000/api/personnel")
       .then((res) => {
         const updated = res.data.map((p) => ({
           ...p,
@@ -35,17 +35,16 @@ function App() {
   const filteredList = personnelList.filter((person) => {
     const nameMatches =
       person.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
-    const rankMatches =
-      person.rank?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
+    const gradeMatches =
+      person.grade?.toLowerCase().includes(searchTerm.toLowerCase()) || false;
     const statusMatches =
       !filterStatus || person.status === filterStatus;
 
-    return (nameMatches || rankMatches) && statusMatches;
+    return (nameMatches || gradeMatches) && statusMatches;
   });
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
       <header className="header">
         <div className="logo-container">
           <img
@@ -57,14 +56,12 @@ function App() {
         </div>
       </header>
 
-      {/* Add Form */}
       <AddPersonnelForm onAdd={handleAddPersonnel} />
 
-      {/* Search + Filter */}
       <div style={{ textAlign: "center", marginTop: "30px" }}>
         <input
           type="text"
-          placeholder="Search by name or rank"
+          placeholder="Search by name or grade"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
@@ -90,37 +87,47 @@ function App() {
         </select>
       </div>
 
-      {/* Personnel List */}
       <div className="personnel-list">
         <h2>Personnel List</h2>
         <table>
           <thead>
             <tr>
               <th>Name</th>
-              <th>Rank</th>
+              <th>Grade</th>
               <th>Status</th>
-              <th>Role</th> {/* Added Role column */}
-              <th>Army Number</th> {/* Added Army Number column */}
-              <th>Image</th>
+              <th>Date of Birth</th>
+              <th>Role</th>
+              <th>Region</th>
+              <th>Brigade</th>
+              <th>Battalion</th>
+              <th>Weapon SN</th>
+              <th>Radio SN</th>
+              <th>Photo</th>
             </tr>
           </thead>
           <tbody>
             {filteredList.map((person, index) => (
               <tr key={index}>
                 <td>{person.name}</td>
-                <td>{person.rank}</td>
+                <td>{person.grade}</td>
                 <td>
                   <span
                     style={{
-                      color: person.status === "Active" ? "#2ecc71" : "#e74c3c",
+                      color:
+                        person.status === "Active" ? "#2ecc71" : "#e74c3c",
                       fontWeight: "bold",
                     }}
                   >
                     {person.status}
                   </span>
                 </td>
-                <td>{person.role}</td> {/* Display role */}
-                <td>{person.army_number}</td> {/* Display army number */}
+                <td>{person.date_of_birth}</td>
+                <td>{person.role}</td>
+                <td>{person.region}</td>
+                <td>{person.brigade}</td>
+                <td>{person.battalion}</td>
+                <td>{person.weapon_serial_number}</td>
+                <td>{person.radio_serial_number}</td>
                 <td>
                   {person.photoURL ? (
                     <img
