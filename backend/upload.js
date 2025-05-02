@@ -2,7 +2,7 @@ const fs = require('fs');
 const mysql = require('mysql2');
 const csv = require('csv-parser');
 
-// ✅ CSV path (update filename if needed)
+// ✅ CSV path
 const csvFilePath = 'C:/Users/LENOVO/military-mis/backend/csv_files/personnel.csv';
 
 // ✅ MySQL DB connection
@@ -10,10 +10,9 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: 'Canada@2026!',
-  database: 'military_mis'
+  database: 'military_mis',
 });
 
-// ✅ Connect to DB
 db.connect((err) => {
   if (err) {
     console.error('❌ MySQL connection failed:', err.message);
@@ -23,41 +22,95 @@ db.connect((err) => {
   processCSV();
 });
 
-// ✅ Process CSV and insert into DB
 function processCSV() {
   const results = [];
 
   fs.createReadStream(csvFilePath)
     .pipe(csv())
-    .on('data', (row) => {
-      results.push(row);
-    })
+    .on('data', (row) => results.push(row))
     .on('end', () => {
       console.log(`📄 CSV read complete. Rows found: ${results.length}`);
 
       results.forEach((row, i) => {
-        const { name, grade, status, army_number, role, photo } = row;
+        const {
+          name,
+          grade,
+          status,
+          army_number,
+          date_of_birth,
+          photo,
+          role,
+          region,
+          brigade,
+          battalion,
+          weapon_serial_number,
+          radio_serial_number,
+        } = row;
 
-        // Insert into personnel table, using 'grade' instead of 'grade'
-        const query = `
-          INSERT INTO personnel (name, \`grade\`, status, army_number, role, photo)
+        const personnelQuery = `
+          INSERT INTO personnel (name, grade, status, army_number, date_of_birth, photo)
           VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE 
+            name = VALUES(name), 
+            grade = VALUES(grade),
+            status = VALUES(status),
+            date_of_birth = VALUES(date_of_birth),
+            photo = VALUES(photo)
         `;
 
-        db.query(query, [name, grade, status, army_number, role, photo], (err) => {
+        const personnelValues = [
+          name,
+          grade,
+          status,
+          army_number,
+          date_of_birth || '1970-01-01',
+          photo || null,
+        ];
+
+        db.query(personnelQuery, personnelValues, (err) => {
           if (err) {
-            console.error(`❌ Row ${i + 1} insert failed:`, err.sqlMessage);
-          } else {
-            console.log(`✅ Row ${i + 1} inserted: ${name}`);
+            console.error(`❌ Personnel insert failed (row ${i + 1}):`, err.sqlMessage);
+            return;
           }
+
+          const assignmentQuery = `
+            INSERT INTO military_assignments 
+              (army_number, role, region, brigade, battalion, weapon_serial_number, radio_serial_number)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              role = VALUES(role),
+              region = VALUES(region),
+              brigade = VALUES(brigade),
+              battalion = VALUES(battalion),
+              weapon_serial_number = VALUES(weapon_serial_number),
+              radio_serial_number = VALUES(radio_serial_number)
+          `;
+
+          const assignmentValues = [
+            army_number,
+            role,
+            region,
+            brigade,
+            battalion,
+            weapon_serial_number,
+            radio_serial_number,
+          ];
+
+          db.query(assignmentQuery, assignmentValues, (err2) => {
+            if (err2) {
+              console.error(`❌ Assignment insert failed (row ${i + 1}):`, err2.sqlMessage);
+            } else {
+              console.log(`✅ Row ${i + 1} inserted: ${name}`);
+            }
+          });
         });
       });
 
-      // Close connection after delay to let inserts finish
+      // Delay DB close to ensure all inserts complete
       setTimeout(() => {
         db.end();
         console.log('🔚 DB connection closed.');
-      }, 2000);
+      }, 3000);
     })
     .on('error', (err) => {
       console.error('❌ Error reading CSV:', err.message);

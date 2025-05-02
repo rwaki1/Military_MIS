@@ -1,9 +1,29 @@
 // src/Dashboard.js
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import App from "./App";
 import "./components/Dashboard.css";
 
 function Dashboard() {
+  const [activeCount, setActiveCount] = useState(0);
+  const [inactiveCount, setInactiveCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/personnel")
+      .then((res) => {
+        const data = res.data;
+        const active = data.filter((p) => p.status === "Active").length;
+        const inactive = data.filter((p) => p.status === "Inactive").length;
+        setActiveCount(active);
+        setInactiveCount(inactive);
+        setTotalCount(data.length);
+      })
+      .catch((err) => {
+        console.error("Error fetching personnel stats:", err.message);
+      });
+  }, []);
+
   return (
     <div className="dashboard-wrapper">
       {/* Sidebar */}
@@ -32,15 +52,15 @@ function Dashboard() {
           <div className="stats-summary">
             <div className="stat-card">
               <h3>Active Personnel</h3>
-              <p>50</p>
+              <p>{activeCount}</p>
             </div>
             <div className="stat-card">
               <h3>Inactive Personnel</h3>
-              <p>10</p>
+              <p>{inactiveCount}</p>
             </div>
             <div className="stat-card">
-              <h3>Total Reports</h3>
-              <p>100</p>
+              <h3>Total Personnel</h3>
+              <p>{totalCount}</p>
             </div>
           </div>
         </header>
@@ -61,7 +81,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* This renders your personnel form and list */}
+        {/* Form and Table */}
         <div className="dashboard-main-area">
           <App />
         </div>
