@@ -6,7 +6,6 @@ body, html, #root {
   background-color: #223322; /* Military green */
 }
 
-
 /* General Body Styling - Military Theme */
 body {
   font-family: 'Arial', sans-serif;
@@ -63,19 +62,24 @@ form {
   padding: 30px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  max-width: 600px;
   width: 100%;
   margin: 20px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 form h2 {
   color: #ffffff;
+  width: 100%;
+  text-align: center;
 }
 
 label {
   color: #ecf0f1;
   display: block;
   margin-bottom: 5px;
+  font-size: 14px;
 }
 
 input,
@@ -95,6 +99,11 @@ select:focus {
   outline: none;
 }
 
+/* Two-column layout for form fields */
+.form-column {
+  width: 48%; /* Adjusts to two columns */
+}
+
 button {
   background-color: #27ae60;
   color: white;
@@ -103,6 +112,9 @@ button {
   border-radius: 5px;
   font-size: 16px;
   cursor: pointer;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
 }
 
 button:hover {
@@ -155,6 +167,11 @@ img {
 
   form {
     padding: 20px;
+    display: block;
+  }
+
+  .form-column {
+    width: 100%;
   }
 
   table {
