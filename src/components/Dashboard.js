@@ -8,9 +8,11 @@ function Dashboard() {
   const [activeCount, setActiveCount] = useState(0);
   const [inactiveCount, setInactiveCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [viewMode, setViewMode] = useState("card"); // NEW: Toggle state
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/personnel")
+    axios
+      .get("http://localhost:5000/api/personnel")
       .then((res) => {
         const data = res.data;
         const active = data.filter((p) => p.status === "Active").length;
@@ -81,9 +83,27 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Form and Table */}
+        {/* View Toggle Button */}
+        <div style={{ textAlign: "center", marginTop: "20px" }}>
+          <button
+            onClick={() => setViewMode(viewMode === "card" ? "table" : "card")}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#002b80",
+              color: "#fff",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+          >
+            {viewMode === "card" ? "Switch to Table View" : "Switch to Card View"}
+          </button>
+        </div>
+
+        {/* Form and View Output */}
         <div className="dashboard-main-area">
-          <App />
+          <App viewMode={viewMode} />
         </div>
       </main>
     </div>
