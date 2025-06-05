@@ -1,39 +1,99 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-function AddPersonnelForm({ onAdd }) {
+function AddPersonnelForm({ onAdd, grades, roles, regions }) {
+  // Form states
   const [name, setName] = useState("");
-  const [grade, setGrade] = useState(""); // Changed from rank to grade
+  const [grade, setGrade] = useState("");
   const [status, setStatus] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [armyNumber, setArmyNumber] = useState("");
   const [photo, setPhoto] = useState(null);
 
-  // Assignment fields
   const [role, setRole] = useState("");
   const [region, setRegion] = useState("");
   const [brigade, setBrigade] = useState("");
   const [battalion, setBattalion] = useState("");
+
+  const [brigades, setBrigades] = useState([]);
+  const [battalions, setBattalions] = useState([]);
+
   const [weaponSerialNumber, setWeaponSerialNumber] = useState("");
   const [radioSerialNumber, setRadioSerialNumber] = useState("");
+
+  // Fetch brigades when region changes
+  useEffect(() => {
+    if (!region) {
+      setBrigades([]);
+      setBrigade("");
+      setBattalions([]);
+      setBattalion("");
+      return;
+    }
+
+    fetch(`http://localhost:5000/api/brigades?region_id=${region}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBrigades(data);
+        setBrigade("");
+        setBattalions([]);
+        setBattalion("");
+      })
+      .catch((err) => {
+        console.error("Failed to fetch brigades", err);
+        setBrigades([]);
+      });
+  }, [region]);
+
+  // Fetch battalions when brigade changes
+  useEffect(() => {
+    if (!brigade) {
+      setBattalions([]);
+      setBattalion("");
+      return;
+    }
+
+    fetch(`http://localhost:5000/api/battalions?brigade_id=${brigade}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBattalions(data);
+        setBattalion("");
+      })
+      .catch((err) => {
+        console.error("Failed to fetch battalions", err);
+        setBattalions([]);
+      });
+  }, [brigade]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const formData = new FormData();
     formData.append("name", name);
-    formData.append("grade", grade); // Corrected from rank to grade
+    formData.append("grade_id", grade);
     formData.append("status", status);
     formData.append("date_of_birth", dateOfBirth);
     formData.append("army_number", armyNumber);
-    formData.append("photo", photo);
-
-    // Assignment data
-    formData.append("role", role);
-    formData.append("region", region);
-    formData.append("brigade", brigade);
-    formData.append("battalion", battalion);
+    if (photo) formData.append("photo", photo);
+    formData.append("role_id", role);
+    formData.append("region_id", region);
+    formData.append("brigade_id", brigade);
+    formData.append("battalion_id", battalion);
     formData.append("weapon_serial_number", weaponSerialNumber);
     formData.append("radio_serial_number", radioSerialNumber);
+
+    console.log("📤 Submitting form with values:", {
+      name,
+      grade,
+      status,
+      dateOfBirth,
+      armyNumber,
+      role,
+      region,
+      brigade,
+      battalion,
+      weaponSerialNumber,
+      radioSerialNumber,
+    });
 
     try {
       const response = await fetch("http://localhost:5000/api/personnel", {
@@ -42,15 +102,15 @@ function AddPersonnelForm({ onAdd }) {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to add personnel and assignment");
+        throw new Error("Failed to add personnel");
       }
 
       const data = await response.json();
-      onAdd(data); // Notify parent component about the success
+      onAdd(data);
 
-      // Reset form fields after successful submission
+      // Reset form
       setName("");
-      setGrade(""); // Reset grade field
+      setGrade("");
       setStatus("");
       setDateOfBirth("");
       setArmyNumber("");
@@ -61,8 +121,10 @@ function AddPersonnelForm({ onAdd }) {
       setBattalion("");
       setWeaponSerialNumber("");
       setRadioSerialNumber("");
+      setBrigades([]);
+      setBattalions([]);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error submitting form:", error);
     }
   };
 
@@ -72,109 +134,103 @@ function AddPersonnelForm({ onAdd }) {
       <form onSubmit={handleSubmit}>
         <div>
           <label>Name: </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
+
         <div>
           <label>Grade: </label>
-          <input
-            type="text"
-            value={grade} // Corrected from rank to grade
-            onChange={(e) => setGrade(e.target.value)}
-            required
-          />
+          <select value={String(grade)} onChange={(e) => setGrade(e.target.value)} required>
+            <option value="">Select Grade</option>
+            {grades.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.grade_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div>
           <label>Status: </label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            required
-          >
+          <select value={status} onChange={(e) => setStatus(e.target.value)} required>
             <option value="">Select Status</option>
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
         </div>
+
         <div>
           <label>Date of Birth: </label>
-          <input
-            type="date"
-            value={dateOfBirth}
-            onChange={(e) => setDateOfBirth(e.target.value)}
-            required
-          />
+          <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
         </div>
+
         <div>
           <label>Army Number: </label>
-          <input
-            type="text"
-            value={armyNumber}
-            onChange={(e) => setArmyNumber(e.target.value)}
-            required
-          />
+          <input type="text" value={armyNumber} onChange={(e) => setArmyNumber(e.target.value)} required />
         </div>
+
         <div>
           <label>Role: </label>
-          <input
-            type="text"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            required
-          />
+          <select value={String(role)} onChange={(e) => setRole(e.target.value)} required>
+            <option value="">Select Role</option>
+            {roles.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.role_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div>
           <label>Region: </label>
-          <input
-            type="text"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-          />
+          <select value={String(region)} onChange={(e) => setRegion(e.target.value)} required>
+            <option value="">Select Region</option>
+            {regions.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.region_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div>
           <label>Brigade: </label>
-          <input
-            type="text"
-            value={brigade}
-            onChange={(e) => setBrigade(e.target.value)}
-          />
+          <select value={String(brigade)} onChange={(e) => setBrigade(e.target.value)} required>
+            <option value="">Select Brigade</option>
+            {brigades.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.brigade_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div>
           <label>Battalion: </label>
-          <input
-            type="text"
-            value={battalion}
-            onChange={(e) => setBattalion(e.target.value)}
-          />
+          <select value={String(battalion)} onChange={(e) => setBattalion(e.target.value)} required>
+            <option value="">Select Battalion</option>
+            {battalions.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.battalion_name}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div>
           <label>Weapon Serial #: </label>
-          <input
-            type="text"
-            value={weaponSerialNumber}
-            onChange={(e) => setWeaponSerialNumber(e.target.value)}
-          />
+          <input type="text" value={weaponSerialNumber} onChange={(e) => setWeaponSerialNumber(e.target.value)} />
         </div>
+
         <div>
           <label>Radio Serial #: </label>
-          <input
-            type="text"
-            value={radioSerialNumber}
-            onChange={(e) => setRadioSerialNumber(e.target.value)}
-          />
+          <input type="text" value={radioSerialNumber} onChange={(e) => setRadioSerialNumber(e.target.value)} />
         </div>
+
         <div>
           <label>Photo: </label>
-          <input
-            type="file"
-            onChange={(e) => setPhoto(e.target.files[0])}
-            accept="image/*"
-          />
+          <input type="file" onChange={(e) => setPhoto(e.target.files[0])} accept="image/*" />
         </div>
+
         <button type="submit">Add Personnel</button>
       </form>
     </div>

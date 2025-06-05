@@ -1,112 +1,106 @@
-const express = require('express');
-const mysql = require('mysql2');
+const db = require('../config/db'); // ✅ use shared connection
+
 const multer = require('multer');
 const path = require('path');
-const cors = require('cors'); // Allow frontend to access backend
-
-const app = express();
-const port = 5000;
-
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.use('/uploads', express.static('uploads')); // Make photo uploads accessible
-
-// Setup MySQL connection
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'password', // Replace with your actual password
-  database: 'military_mis',
-});
 
 db.connect((err) => {
-  if (err) throw err;
+  if (err) {
+    console.error('❌ Failed to connect to the database:', err.message);
+    process.exit(1);
+  }
   console.log('✅ Connected to the database!');
 });
 
-// Setup multer for file uploads
+// 📁 Setup multer for file uploads (stored in /uploads)
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// ✅ POST: Add personnel and military assignments
-app.post('/api/personnel', upload.single('photo'), (req, res) => {
+// Helper to normalize empty strings to null
+const normalizeId = (id) => {
+  if (!id || id === '') return null;
+  return id;
+};
+
+// ➕ Add personnel and military assignment using stored procedure
+const addPersonnel = (req, res) => {
   const {
     name,
-    grade,
+    grade_id,
     status,
     date_of_birth,
     army_number,
-    role,
-    region,
-    brigade,
-    battalion,
+    role_id,
+    region_id,
+    brigade_id,
+    battalion_id,
     weapon_serial_number,
     radio_serial_number,
   } = req.body;
 
   const photo = req.file ? req.file.filename : null;
 
-  const personnelQuery = `
-    INSERT INTO personnel (name, \`grade\`, status, date_of_birth, army_number, photo)
-    VALUES (?, ?, ?, ?, ?, ?)
+  // Adjust the procedure name and parameters list if needed
+  const procedureCall = `
+    CALL AddPersonnel(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
-    personnelQuery,
-    [name, grade, status, date_of_birth, army_number, photo],
-    (err, result) => {
+    procedureCall,
+    [
+      name,
+      normalizeId(grade_id),
+      status,
+      date_of_birth || '1970-01-01',
+      army_number,
+      photo,
+      normalizeId(role_id),
+      normalizeId(region_id),
+      normalizeId(brigade_id),
+      normalizeId(battalion_id),
+      weapon_serial_number || null,
+      radio_serial_number || null
+    ],
+    (err, results) => {
       if (err) {
-        console.error('❌ Error inserting personnel:', err);
-        return res.status(500).json({ message: 'Failed to add personnel', error: err });
+        console.error('❌ Error calling stored procedure:', err);
+        return res.status(500).json({ message: 'Failed to add personnel via procedure', error: err });
       }
 
-      const assignmentQuery = `
-        INSERT INTO military_assignments (army_number, role, region, brigade, battalion, weapon_serial_number, radio_serial_number)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-
-      db.query(
-        assignmentQuery,
-        [army_number, role, region, brigade, battalion, weapon_serial_number, radio_serial_number],
-        (err2) => {
-          if (err2) {
-            console.error('❌ Error inserting assignment:', err2);
-            return res.status(500).json({ message: 'Failed to add assignment', error: err2 });
-          }
-
-          res.status(200).json({ message: '✅ Personnel and assignment added successfully', photo });
-        }
-      );
+      res.status(201).json({
+        message: '✅ Personnel and assignment added successfully via procedure',
+        photo,
+      });
     }
   );
-});
+};
 
-// ✅ GET: Fetch personnel with assignments
-app.get('/api/personnel', (req, res) => {
+// 🔍 Get all personnel with related data (no change)
+const getPersonnel = (req, res) => {
   const query = `
-    SELECT 
+    SELECT
+      p.id,
       p.name,
-      p.grade,
-      p.status,
       p.date_of_birth,
-      p.army_number,
+      p.status,
       p.photo,
-      m.role,
-      m.region,
-      m.brigade,
-      m.battalion,
+      p.army_number,
+      g.grade_name,
+      r.role_name,
+      reg.region_name,
+      b.brigade_name,
+      bat.battalion_name,
       m.weapon_serial_number,
       m.radio_serial_number
     FROM personnel p
+    LEFT JOIN grades g ON p.grade_id = g.id
     LEFT JOIN military_assignments m ON p.army_number = m.army_number
+    LEFT JOIN roles r ON m.role_id = r.id
+    LEFT JOIN regions reg ON m.region_id = reg.id
+    LEFT JOIN brigades b ON m.brigade_id = b.id
+    LEFT JOIN battalions bat ON m.battalion_id = bat.id
   `;
 
   db.query(query, (err, results) => {
@@ -117,9 +111,10 @@ app.get('/api/personnel', (req, res) => {
 
     res.status(200).json(results);
   });
-});
+};
 
-// ✅ Start server
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
-});
+module.exports = {
+  upload,
+  addPersonnel,
+  getPersonnel,
+};

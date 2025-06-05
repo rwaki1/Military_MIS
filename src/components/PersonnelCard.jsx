@@ -27,6 +27,7 @@ const PersonnelCard = ({ person }) => {
       </div>
 
       <div className="personnel-info">
+        <p><strong>Army Number:</strong> {person.army_number}</p>
         <p><strong>Grade:</strong> {person.grade}</p>
         <p><strong>Date of Birth:</strong> {person.date_of_birth}</p>
         <p><strong>Region:</strong> {person.region}</p>
