@@ -12,7 +12,7 @@ function Dashboard() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/personnel")
+      .get("http://localhost:5000/personnel")
       .then((res) => {
         const data = res.data;
         const active = data.filter((p) => p.status === "Active").length;
