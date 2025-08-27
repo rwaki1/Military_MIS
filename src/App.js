@@ -29,7 +29,7 @@ function BulkUploadForm({ onUploadSuccess }) {
     setMessage("");
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/personnel/upload-csv`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/personnel/upload-csv`, {
         method: "POST",
         body: formData,
       });
