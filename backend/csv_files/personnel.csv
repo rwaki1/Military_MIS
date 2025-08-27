@@ -1,6 +1,2 @@
 name,grade,status,army_number,date_of_birth,photo,role,region,brigade,battalion,weapon_serial_number,radio_serial_number
-John Doe,Sergeant,Active,ARMY001,1985-04-12,john.jpg,Squad Leader,North,Kilo,1st Battalion,WSN-12345,RSN-56789
-Jane Smith,Lieutenant,Inactive,ARMY002,1990-06-22,jane.png,Commander,East,Lima,2nd Battalion,WSN-23456,RSN-67890
-Mike Johnson,Captain,Active,ARMY003,1982-11-30,mike.jpeg,Operations Officer,West,Alpha,3rd Battalion,WSN-34567,RSN-78901
-Alice Brown,Major,Active,ARMY004,1978-03-15,alice.jpg,Logistics Officer,Central,Bravo,4th Battalion,WSN-45678,RSN-89012
-Robert Lee,Corporal,Inactive,ARMY005,1995-08-09,robert.png,Medic,South,Charlie,5th Battalion,WSN-56789,RSN-90123
+Jane RWAK,Lieutenante,Active,ARMY010,1990-07-22,jane.jpg,CO,South Division,Lion Brigade,5th Battalion,WSN-54321,RSN-98765
