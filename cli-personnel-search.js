@@ -88,127 +88,134 @@ askCredentials((dbUser, dbPass) => {
     database: 'military_mis'
   });
 
-  const choice = readlineSync.question(
-    chalk.blue.bold("Search by (1) Army Number, (2) Region, (3) Brigade, (4) Battalion: ")
-  );
-  let promptText = "";
-  let query = "";
-
-  switch (choice.trim()) {
-    case "1":
-      promptText = "Enter Army Number: ";
-      query = `SELECT 
-        p.*,
-        g.grade_name,
-        ma.weapon_serial_number,
-        ma.radio_serial_number,
-        r.role_name,
-        reg.region_name,
-        b.brigade_name,
-        bt.battalion_name
-      FROM personnel p
-      LEFT JOIN grades g ON p.grade_id = g.id
-      LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
-      LEFT JOIN roles r ON ma.role_id = r.id
-      LEFT JOIN regions reg ON ma.region_id = reg.id
-      LEFT JOIN brigades b ON ma.brigade_id = b.id
-      LEFT JOIN battalions bt ON ma.battalion_id = bt.id
-      WHERE p.army_number = ?`;
-      break;
-    case "2":
-      promptText = "Enter Region Name: ";
-      query = `SELECT 
-        p.*,
-        g.grade_name,
-        ma.weapon_serial_number,
-        ma.radio_serial_number,
-        r.role_name,
-        reg.region_name,
-        b.brigade_name,
-        bt.battalion_name
-      FROM personnel p
-      LEFT JOIN grades g ON p.grade_id = g.id
-      LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
-      LEFT JOIN roles r ON ma.role_id = r.id
-      LEFT JOIN regions reg ON ma.region_id = reg.id
-      LEFT JOIN brigades b ON ma.brigade_id = b.id
-      LEFT JOIN battalions bt ON ma.battalion_id = bt.id
-      WHERE reg.region_name LIKE CONCAT('%', ?, '%')`;
-      break;
-    case "3":
-      promptText = "Enter Brigade Name: ";
-      query = `SELECT 
-        p.*,
-        g.grade_name,
-        ma.weapon_serial_number,
-        ma.radio_serial_number,
-        r.role_name,
-        reg.region_name,
-        b.brigade_name,
-        bt.battalion_name
-      FROM personnel p
-      LEFT JOIN grades g ON p.grade_id = g.id
-      LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
-      LEFT JOIN roles r ON ma.role_id = r.id
-      LEFT JOIN regions reg ON ma.region_id = reg.id
-      LEFT JOIN brigades b ON ma.brigade_id = b.id
-      LEFT JOIN battalions bt ON ma.battalion_id = bt.id
-      WHERE b.brigade_name LIKE CONCAT('%', ?, '%')`;
-      break;
-    case "4":
-      promptText = "Enter Battalion Name: ";
-      query = `SELECT 
-        p.*,
-        g.grade_name,
-        ma.weapon_serial_number,
-        ma.radio_serial_number,
-        r.role_name,
-        reg.region_name,
-        b.brigade_name,
-        bt.battalion_name
-      FROM personnel p
-      LEFT JOIN grades g ON p.grade_id = g.id
-      LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
-      LEFT JOIN roles r ON ma.role_id = r.id
-      LEFT JOIN regions reg ON ma.region_id = reg.id
-      LEFT JOIN brigades b ON ma.brigade_id = b.id
-      LEFT JOIN battalions bt ON ma.battalion_id = bt.id
-      WHERE bt.battalion_name LIKE CONCAT('%', ?, '%')`;
-      break;
-    default:
-      console.log(chalk.red("Invalid choice."));
-      safeEnd(connection);
-      return;
-  }
-
-  const searchValue = readlineSync.question(chalk.blue.bold(promptText));
-  connection.query(query, [searchValue.trim()], (err, results) => {
+  connection.connect((err) => {
     if (err) {
-      console.log(chalk.red("Database error: " + err.message));
-      safeEnd(connection);
+      console.log(chalk.red("Connection error: " + err.message));
       return;
     }
-    if (results.length > 0) {
-      results.forEach((match, idx) => {
-        console.log(chalk.green.bold(`\nResult #${idx + 1}:`));
-        displayPersonnel(match);
-      });
 
-      const exportAnswer = readlineSync.question(chalk.blue("Export all results to CSV? (y/n): "));
-      if (exportAnswer.trim().toLowerCase() === 'y' || exportAnswer.trim().toLowerCase() === 'yes') {
-        exportToCSV(results);
-      }
-      if (choice.trim() === "1" && results[0].photo) {
-        const photoAnswer = readlineSync.question(chalk.blue("Open photo? (y/n): "));
-        if (photoAnswer.trim().toLowerCase() === 'y' || photoAnswer.trim().toLowerCase() === 'yes') {
-          const photoPath = PHOTO_DIR + results[0].photo;
-          exec(`start "" "${photoPath}"`);
-        }
-      }
-      safeEnd(connection);
-    } else {
-      console.log(chalk.red("No personnel found for your search."));
-      safeEnd(connection);
+    const choice = readlineSync.question(
+      chalk.blue.bold("Search by (1) Army Number, (2) Region, (3) Brigade, (4) Battalion: ")
+    );
+    let promptText = "";
+    let query = "";
+
+    switch (choice.trim()) {
+      case "1":
+        promptText = "Enter Army Number: ";
+        query = `SELECT 
+          p.*,
+          g.grade_name,
+          ma.weapon_serial_number,
+          ma.radio_serial_number,
+          r.role_name,
+          reg.region_name,
+          b.brigade_name,
+          bt.battalion_name
+        FROM personnel p
+        LEFT JOIN grades g ON p.grade_id = g.id
+        LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
+        LEFT JOIN roles r ON ma.role_id = r.id
+        LEFT JOIN regions reg ON ma.region_id = reg.id
+        LEFT JOIN brigades b ON ma.brigade_id = b.id
+        LEFT JOIN battalions bt ON ma.battalion_id = bt.id
+        WHERE p.army_number = ?`;
+        break;
+      case "2":
+        promptText = "Enter Region Name: ";
+        query = `SELECT 
+          p.*,
+          g.grade_name,
+          ma.weapon_serial_number,
+          ma.radio_serial_number,
+          r.role_name,
+          reg.region_name,
+          b.brigade_name,
+          bt.battalion_name
+        FROM personnel p
+        LEFT JOIN grades g ON p.grade_id = g.id
+        LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
+        LEFT JOIN roles r ON ma.role_id = r.id
+        LEFT JOIN regions reg ON ma.region_id = reg.id
+        LEFT JOIN brigades b ON ma.brigade_id = b.id
+        LEFT JOIN battalions bt ON ma.battalion_id = bt.id
+        WHERE reg.region_name LIKE CONCAT('%', ?, '%')`;
+        break;
+      case "3":
+        promptText = "Enter Brigade Name: ";
+        query = `SELECT 
+          p.*,
+          g.grade_name,
+          ma.weapon_serial_number,
+          ma.radio_serial_number,
+          r.role_name,
+          reg.region_name,
+          b.brigade_name,
+          bt.battalion_name
+        FROM personnel p
+        LEFT JOIN grades g ON p.grade_id = g.id
+        LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
+        LEFT JOIN roles r ON ma.role_id = r.id
+        LEFT JOIN regions reg ON ma.region_id = reg.id
+        LEFT JOIN brigades b ON ma.brigade_id = b.id
+        LEFT JOIN battalions bt ON ma.battalion_id = bt.id
+        WHERE b.brigade_name LIKE CONCAT('%', ?, '%')`;
+        break;
+      case "4":
+        promptText = "Enter Battalion Name: ";
+        query = `SELECT 
+          p.*,
+          g.grade_name,
+          ma.weapon_serial_number,
+          ma.radio_serial_number,
+          r.role_name,
+          reg.region_name,
+          b.brigade_name,
+          bt.battalion_name
+        FROM personnel p
+        LEFT JOIN grades g ON p.grade_id = g.id
+        LEFT JOIN military_assignments ma ON p.army_number = ma.army_number
+        LEFT JOIN roles r ON ma.role_id = r.id
+        LEFT JOIN regions reg ON ma.region_id = reg.id
+        LEFT JOIN brigades b ON ma.brigade_id = b.id
+        LEFT JOIN battalions bt ON ma.battalion_id = bt.id
+        WHERE bt.battalion_name LIKE CONCAT('%', ?, '%')`;
+        break;
+      default:
+        console.log(chalk.red("Invalid choice."));
+        safeEnd(connection);
+        return;
     }
+
+    const searchValue = readlineSync.question(chalk.blue.bold(promptText));
+    connection.query(query, [searchValue.trim()], (err, results) => {
+      if (err) {
+        console.log(chalk.red("Database error: " + err.message));
+        safeEnd(connection);
+        return;
+      }
+      if (results.length > 0) {
+        results.forEach((match, idx) => {
+          console.log(chalk.green.bold(`\nResult #${idx + 1}:`));
+          displayPersonnel(match);
+        });
+
+        const exportAnswer = readlineSync.question(chalk.blue("Export all results to CSV? (y/n): "));
+        if (exportAnswer.trim().toLowerCase() === 'y' || exportAnswer.trim().toLowerCase() === 'yes') {
+          exportToCSV(results);
+        }
+        if (choice.trim() === "1" && results[0].photo) {
+          const photoAnswer = readlineSync.question(chalk.blue("Open photo? (y/n): "));
+          if (photoAnswer.trim().toLowerCase() === 'y' || photoAnswer.trim().toLowerCase() === 'yes') {
+            const photoPath = PHOTO_DIR + results[0].photo;
+            exec(`start "" "${photoPath}"`);
+          }
+        }
+        safeEnd(connection);
+      } else {
+        console.log(chalk.red("No personnel found for your search."));
+        safeEnd(connection);
+      }
+    });
   });
 });
